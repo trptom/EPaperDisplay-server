@@ -1,0 +1,4 @@
+User-agent: *
+
+# Disable robots on all pages - this is the server.
+Disallow: /
