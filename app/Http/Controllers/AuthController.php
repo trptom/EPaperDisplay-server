@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -108,6 +110,56 @@ class AuthController extends BaseController
 
     public function user(Request $request)
     {
+        $user = Auth::user();
+        return response()->json(['user' => $user]);
+    }
+
+    /** Register a new user with name/email/password. */
+    public function register(Request $request)
+    {
+        $data = $request->only(['name', 'email', 'password', 'password_confirmation']);
+
+        $validator = Validator::make($data, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
+
+        Auth::login($user);
+
+        return response()->json(['user' => $user], 201);
+    }
+
+    /** Login with email and password. */
+    public function login(Request $request)
+    {
+        $credentials = $request->only(['email', 'password']);
+
+        $validator = Validator::make($credentials, [
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if (!Auth::attempt($credentials, $request->boolean('remember', false))) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        $request->session()->regenerate();
+
         $user = Auth::user();
         return response()->json(['user' => $user]);
     }

@@ -31,4 +31,6 @@ Route::get('/auth/facebook/callback', [AuthController::class, 'handleFacebookCal
 
 // Standard login/logout/getInfo
 Route::get('/auth/user', [AuthController::class, 'user']);
+Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth');
