@@ -1,12 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DisplayController;
 use App\Models\Display;
-
-Route::get('/', function () {
-    return view('welcome');
-});
 
 // Public display image by UUID/token (route-model binding to Display->token)
 Route::get('/display/{displayToken}', [DisplayController::class, 'get'])
@@ -23,3 +20,15 @@ Route::post('/display/{displayId}/set', [DisplayController::class, 'setData'])
 
 // Create a new Display (authenticated)
 Route::post('/display/create', [DisplayController::class, 'create'])->middleware('auth');
+
+// OAuth routes for Google
+Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+// OAuth routes for Facebook
+Route::get('/auth/facebook/redirect', [AuthController::class, 'redirectToFacebook']);
+Route::get('/auth/facebook/callback', [AuthController::class, 'handleFacebookCallback']);
+
+// Standard login/logout/getInfo
+Route::get('/auth/user', [AuthController::class, 'user']);
+Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth');
