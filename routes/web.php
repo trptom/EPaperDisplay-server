@@ -34,3 +34,16 @@ Route::get('/auth/user', [AuthController::class, 'user']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth');
+
+// Dev-only helper: allow GET logout without CSRF when developing (unsafe for production)
+if (env('APP_ENV') !== 'production') {
+    Route::get('/auth/logout-no-csrf', [AuthController::class, 'logoutNoCsrf']);
+}
+
+// Email verification (signed link will point here)
+Route::get('/auth/verify-email/{id}/{hash}', [AuthController::class, 'verify'])
+    ->middleware(['signed'])
+    ->name('verification.verify');
+
+// Resend verification (must be authenticated)
+Route::post('/auth/email/resend', [AuthController::class, 'resendVerification'])->middleware('auth');

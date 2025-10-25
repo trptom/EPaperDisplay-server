@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -135,9 +137,37 @@ class AuthController extends BaseController
             'password' => Hash::make($data['password']),
         ]);
 
+        // Fire the Registered event so Laravel will send the email verification
+        event(new Registered($user));
+
         Auth::login($user);
 
         return response()->json(['user' => $user], 201);
+    }
+
+    /** Verify the user's email using Laravel's signed verification URL. */
+    public function verify(EmailVerificationRequest $request)
+    {
+        $request->fulfill();
+
+        // Return simple JSON success response
+        return response()->json(['message' => 'Email verified']);
+    }
+
+    /** Resend verification notification to authenticated user. */
+    public function resendVerification(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email already verified'], 400);
+        }
+
+        $user->sendEmailVerificationNotification();
+        return response()->json(['message' => 'Verification email resent']);
     }
 
     /** Login with email and password. */
@@ -170,6 +200,26 @@ class AuthController extends BaseController
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return response()->json([], 204);
+        return response()->json(['user' => null]);
+    }
+
+    /**
+     * Dev-only: force logout without CSRF/token verification.
+     * Only enabled when APP_ENV !== 'production'.
+     * Useful when client can't send XSRF token (local dev). Do NOT enable in prod.
+     */
+    public function logoutNoCsrf(Request $request)
+    {
+        if (env('APP_ENV') === 'production') {
+            return response()->json(['message' => 'Not allowed'], 403);
+        }
+
+        // Log for debugging
+        Log::debug('logoutNoCsrf called; invalidating session for debugging.');
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return response()->json(['message' => 'Logged out (dev-only)'], 200);
     }
 }
