@@ -21,6 +21,9 @@ Route::post('/display/{displayId}/set', [DisplayController::class, 'setData'])
 // Create a new Display (authenticated)
 Route::post('/display/create', [DisplayController::class, 'create'])->middleware('auth');
 
+// List displays for the authenticated user (returns JSON)
+Route::get('/displays', [DisplayController::class, 'index'])->middleware('auth');
+
 // OAuth routes for Google
 Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);

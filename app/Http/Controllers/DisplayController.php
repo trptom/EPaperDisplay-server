@@ -10,6 +10,18 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Str;
 
 class DisplayController extends BaseController {
+    public function index(Request $request): JsonResponse {
+        $userId = $request->user()->id ?? null;
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        // Return only displays table data for the current user (no related joins)
+        $displays = Display::where('user_id', $userId)->get();
+
+        return response()->json(['displays' => $displays]);
+    }
+
     public function get(Display $display): Response {
         // TODO: render the display's current image using its modules.
         $body = $display->token; // placeholder image data
@@ -52,22 +64,19 @@ class DisplayController extends BaseController {
     }
 
     public function create(Request $request): JsonResponse {
-        $data = $request->validate([
-            'name' => 'nullable|string|max:64',
-            'model' => 'nullable|integer',
-            'width' => 'nullable|integer',
-            'height' => 'nullable|integer',
-        ]);
-
         $userId = $request->user()->id ?? null;
         if (!$userId) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        $display = Display::create(array_merge($data, [
+        // Current numeric timestamp (seconds since epoch).
+        $timestamp = now()->getTimestamp();
+
+        $display = Display::create([
             'user_id' => $userId,
-            'token' => (string) Str::uuid(),
-        ]));
+            'name' => 'New Display',
+            'token' => (string) $timestamp . '-' . (string) Str::uuid(),
+        ]);
 
         return response()->json($display, 201);
     }
