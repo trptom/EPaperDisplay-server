@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DisplayController;
 use App\Models\Display;
+use App\Http\Controllers\DashboardController;
 
 // Public display image by UUID/token (route-model binding to Display->token)
 Route::get('/display/{displayToken}', [DisplayController::class, 'get'])
@@ -50,3 +51,7 @@ Route::get('/auth/verify-email/{id}/{hash}', [AuthController::class, 'verify'])
 
 // Resend verification (must be authenticated)
 Route::post('/auth/email/resend', [AuthController::class, 'resendVerification'])->middleware('auth');
+
+// Public dashboard with usage statistics
+Route::get('/dashboard', [DashboardController::class, 'public']);
+Route::get('/dashboard/private', [DashboardController::class, 'private']);
