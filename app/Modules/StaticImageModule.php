@@ -3,47 +3,84 @@
 namespace App\Modules;
 
 use App\Modules\_Module;
+use GdImage;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StaticImageModule extends _Module
 {
-    public function info(Request $request): JsonResponse
-    {
-        // Return an empty JSON object for now; payload will be implemented later.
-        return response()->json((object)[]);
+    public function getAttsDef(): array {
+        return [
+            new ModuleAttrDefinition('url', MODULE_ATTR_TYPE_STRING, null)
+        ];
     }
 
-    public function set(Request $request): JsonResponse
-    {
-        // Not implemented for this module.
-        return response()->json(['message' => 'Not implemented'], 501);
-    }
+    public function getImage(int $w, int $h, array $atts): GdImage|null {
+        $url = $atts['url'] ?? null;
+        $aspectRatio = $atts['aspect_ratio'] ?? null;
 
-    public function get(Request $request): Response
-    {
-        $url = 'http://www.google.cz/intl/en_ALL/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png';
+        $img = null;
 
-        try {
-            $res = \Illuminate\Support\Facades\Http::timeout(10)
-                ->withHeaders(['Accept' => 'image/png'])
-                ->get($url);
+        if ($url && filter_var($url, FILTER_VALIDATE_URL)) {
+            // Use a short timeout when fetching external images. Suppress warnings.
+            $context = stream_context_create([
+                'http' => ['timeout' => 5],
+                'https' => ['timeout' => 5],
+            ]);
 
-            if ($res->successful()) {
-                $body = $res->body();
-                $contentType = $res->header('Content-Type') ?? 'image/png';
+            $data = @file_get_contents($url, false, $context);
+            if ($data !== false) {
+                $external = @imagecreatefromstring($data);
+                if ($external !== false) {
+                    // Create destination canvas and center-fit the external image
+                    $img = imagecreatetruecolor($w, $h);
+                    if ($img !== false) {
+                        // Fill white background
+                        $white = imagecolorallocate($img, 255, 255, 255);
+                        imagefilledrectangle($img, 0, 0, $w, $h, $white);
 
-                return response($body, 200)
-                    ->header('Content-Type', $contentType)
-                    ->header('Content-Length', strlen($body));
+                        $ew = imagesx($external);
+                        $eh = imagesy($external);
+
+                        if ($ew > 0 && $eh > 0) {
+                            if ($aspectRatio) {
+                                // Fit while preserving aspect ratio
+                                $scale = min($w / $ew, $h / $eh, 1);
+                                $tw = (int) round($ew * $scale);
+                                $th = (int) round($eh * $scale);
+                                $dstX = (int) round(($w - $tw) / 2);
+                                $dstY = (int) round(($h - $th) / 2);
+                            } else {
+                                // Stretch to fill
+                                $tw = $w;
+                                $th = $h;
+                                $dstX = 0;
+                                $dstY = 0;
+                            }
+
+                            // Preserve transparency for PNG/GIF
+                            if (imageistruecolor($external) === false) {
+                                $tmp = imagecreatetruecolor($tw, $th);
+                                $trans = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+                                imagefill($tmp, 0, 0, $trans);
+                                imagesavealpha($tmp, true);
+                                imagecopyresampled($tmp, $external, 0, 0, 0, 0, $tw, $th, $ew, $eh);
+                                imagecopy($img, $tmp, $dstX, $dstY, 0, 0, $tw, $th);
+                                imagedestroy($tmp);
+                            } else {
+                                imagecopyresampled($img, $external, $dstX, $dstY, 0, 0, $tw, $th, $ew, $eh);
+                            }
+                        }
+                    } else {
+                        $img = null;
+                    }
+
+                    imagedestroy($external);
+                }
             }
-
-            return response('Failed to fetch image', 502)
-                ->header('Content-Type', 'text/plain');
-        } catch (\Exception $e) {
-            return response("Error fetching image 2: {$e->getMessage()}", 502)
-                ->header('Content-Type', 'text/plain');
         }
+
+        return $img;
     }
 }
