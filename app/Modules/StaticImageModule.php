@@ -12,11 +12,12 @@ class StaticImageModule extends _Module
 {
     public function getAttsDef(): array {
         return [
-            new ModuleAttrDefinition('url', MODULE_ATTR_TYPE_STRING, null)
+            new ModuleAttrDefinition('url', MODULE_ATTR_TYPE_STRING, null),
+            new ModuleAttrDefinition('aspect_ratio', MODULE_ATTR_TYPE_BOOLEAN, null)
         ];
     }
 
-    public function getImage(int $w, int $h, array $atts): GdImage|null {
+    public function getImage(string $lang, int $w, int $h, array $atts): GdImage|null {
         $url = $atts['url'] ?? null;
         $aspectRatio = $atts['aspect_ratio'] ?? null;
 
@@ -37,8 +38,7 @@ class StaticImageModule extends _Module
                     $img = imagecreatetruecolor($w, $h);
                     if ($img !== false) {
                         // Fill white background
-                        $white = imagecolorallocate($img, 255, 255, 255);
-                        imagefilledrectangle($img, 0, 0, $w, $h, $white);
+                        imagefilledrectangle($img, 0, 0, $w, $h, COLOR_WHITE);
 
                         $ew = imagesx($external);
                         $eh = imagesy($external);
