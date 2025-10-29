@@ -22,6 +22,7 @@ class Module extends Model
         'y',
         'width',
         'height',
+        'border',
         'data',
     ];
 
@@ -31,6 +32,7 @@ class Module extends Model
         'y' => 'integer',
         'width' => 'integer',
         'height' => 'integer',
+        'border' => 'integer',
     ];
 
     public function display()

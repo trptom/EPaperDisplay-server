@@ -18,6 +18,7 @@ class Display extends Model
         'model',
         'width',
         'height',
+        'language',
         'ip_filter',
         'displayed',
     ];

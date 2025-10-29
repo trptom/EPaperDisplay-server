@@ -16,6 +16,7 @@ return new class extends Migration
             $table->smallInteger('y');
             $table->smallInteger('width');
             $table->smallInteger('height');
+            $table->smallInteger('border')->default(0);
             $table->text('data')->nullable()->default(null);
             $table->timestamp('created_at')->nullable();
 

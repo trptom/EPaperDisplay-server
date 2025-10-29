@@ -21,6 +21,7 @@ return new class extends Migration
             $table->smallInteger('model')->default(0);
             $table->smallInteger('width')->default(480);
             $table->smallInteger('height')->default(800);
+            $table->string('language', 5)->default("en-US");
             $table->boolean('ip_filter')->default(false);
             $table->integer('displayed')->default(0);
             $table->timestamps();
