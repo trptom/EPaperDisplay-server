@@ -121,14 +121,40 @@ class DisplayController extends BaseController {
 
         // Fill with white background
         $white = imagecolorallocate($img, 255, 255, 255);
+        $black = imagecolorallocate($img, 0, 0, 0);
         imagefilledrectangle($img, 0, 0, $display->width, $display->height, $white);
 
-        $display->modules->each(function ($module) use ($display) {
+        $display->modules->each(function ($module) use ($img, $display, $black) {
+            for ($i=0; $i<$module->border; $i++) {
+                // Draw border
+                imagerectangle(
+                    $img,
+                    $module->x + $i,
+                    $module->y + $i,
+                    $module->x + $module->width - $i - 1,
+                    $module->y + $module->height - $i - 1,
+                    $black
+                );
+            }
+
+            $w = $display->width - 2 * $module->border;
+            $h = $display->height - 2 * $module->border;
+
             $moduleImpl = _Module::getModule($module->id);
-            $img = $moduleImpl->getImage($display->width, $display->height, $module->data);
-            if ($img !== null) {
+            $moduleImg = $moduleImpl->getImage(
+                $display->language,
+                $w,
+                $h,
+                $module->data);
+            if ($moduleImg !== null) {
                 // Merge the module image into the display image
-                imagecopy($img, $img, 0, 0, 0, 0, $display->width, $display->height);
+                imagecopy($img, $moduleImg,
+                        $module->x + $module->border,
+                        $module->y + $module->border,
+                        0,
+                        0,
+                        $w,
+                        $h);
             }
         });
 
