@@ -21,7 +21,10 @@ return new class extends Migration
             $table->smallInteger('model')->default(0);
             $table->smallInteger('width')->default(480);
             $table->smallInteger('height')->default(800);
-            $table->string('language', 5)->default("en-US");
+            $table->string('language', 5)->nullable()->default(null); // 639-1 language code and ISO 3166-1 country code, e.g. en-US
+            $table->string('timezone', 5)->nullable()->default(null); // TimeZone name, e.g. Europe/Prague
+            $table->decimal('latitude', 8, 5)->nullable()->default(null);
+            $table->decimal('longitude', 8, 5)->nullable()->default(null);
             $table->boolean('ip_filter')->default(false);
             $table->integer('displayed')->default(0);
             $table->timestamps();

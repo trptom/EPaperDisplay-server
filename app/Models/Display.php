@@ -19,11 +19,16 @@ class Display extends Model
         'width',
         'height',
         'language',
+        'timezone',
+        'latitude',
+        'longitude',
         'ip_filter',
         'displayed',
     ];
 
     protected $casts = [
+        'latitude' => 'decimal:5',
+        'longitude' => 'decimal:5',
         'ip_filter' => 'boolean',
         'model' => 'integer',
         'width' => 'integer',
