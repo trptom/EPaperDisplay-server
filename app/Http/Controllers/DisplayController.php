@@ -9,7 +9,7 @@ use Illuminate\Http\Response;
 use App\Models\Display;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Str;
-use const App\Modules\MODULE_ID_STATIC_IMAGE;
+use Illuminate\Support\Facades\DB;
 
 class DisplayController extends BaseController {
     public function index(Request $request): JsonResponse {
@@ -57,6 +57,9 @@ class DisplayController extends BaseController {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
+        // Load modules relationship
+        $displayId->load('modules');
+
         return response()->json($displayId);
     }
 
@@ -70,8 +73,57 @@ class DisplayController extends BaseController {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // TODO: implement set logic (update modules or data)
-        return response()->json([], 204);
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:64',
+            'model' => 'sometimes|integer',
+            'width' => 'sometimes|integer',
+            'height' => 'sometimes|integer',
+            'language' => 'sometimes|string|max:5|nullable',
+            'timezone' => 'sometimes|string|max:50|nullable',
+            'latitude' => 'sometimes|numeric|nullable',
+            'longitude' => 'sometimes|numeric|nullable',
+            'ip_filter' => 'boolean',
+            'modules' => 'array',
+            'modules.*.position' => 'required|integer',
+            'modules.*.type' => 'required|integer',
+            'modules.*.x' => 'required|integer',
+            'modules.*.y' => 'required|integer',
+            'modules.*.width' => 'required|integer',
+            'modules.*.height' => 'required|integer',
+            'modules.*.border' => 'required|integer',
+            'modules.*.data' => 'sometimes|array|nullable',
+        ]);
+
+        // Convert 'modules.*.data' => 'sometimes|string|nullable' from Array to String.
+        foreach ($validated['modules'] as $index => $module) {
+            if (isset($module['data'])) {
+                $validated['modules'][$index]['data'] = json_encode($module['data']);
+            }
+        }
+
+        try {
+            DB::transaction(function () use ($displayId, $request, $validated) {
+                $displayId->update($validated);
+
+                // Remove all existing modules
+                $displayId->modules()->delete();
+
+                // Add new modules
+                foreach ($validated['modules'] as $moduleData) {
+                    $displayId->modules()->create($moduleData);
+                }
+            });
+
+            // Success: No Content
+            return response()->json([], 204);
+        } catch (\Throwable $e) {
+            // Failure: Internal Server Error
+            return response()->json([
+                'message' => 'Failed to update display data',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null,
+            ], 500);
+        }
     }
 
     public function create(Request $request): JsonResponse {
