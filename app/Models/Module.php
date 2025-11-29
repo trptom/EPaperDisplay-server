@@ -37,6 +37,7 @@ class Module extends Model
         'width' => 'integer',
         'height' => 'integer',
         'border' => 'integer',
+        'data' => 'array',
     ];
 
     public function display()
