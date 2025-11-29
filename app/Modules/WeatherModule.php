@@ -2,11 +2,9 @@
 
 namespace App\Modules;
 
+use App\Models\Display;
 use App\Modules\_Module;
 use GdImage;
-use Illuminate\Http\Response;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class WeatherModule extends _Module
 {
@@ -15,13 +13,23 @@ class WeatherModule extends _Module
         ];
     }
 
-    public function getImage(string $lang, int $w, int $h, array $atts): GdImage|null {
+    public function getImage(Display &$display, int $w, int $h, array $atts): GdImage|null {
+        $location = null;
+        if ($display->latitude !== null && $display->longitude !== null) {
+            $location = [$display->latitude, $display->longitude];
+        }
+        if (!$location && isset($atts['latitude']) && isset($atts['longitude'])) {
+            $location = [$atts['latitude'], $atts['longitude']];
+        }
+
         $img = imagecreatetruecolor($w, $h);
         if ($img == false) {
             return null;
         }
 
-        // TODO weather forecast implementation.
+        if (!$location) {
+            $location = [0, 0]; // Default location
+        }
 
         return $img;
     }

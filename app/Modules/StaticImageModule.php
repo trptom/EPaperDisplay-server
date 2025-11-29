@@ -2,11 +2,9 @@
 
 namespace App\Modules;
 
+use App\Models\Display;
 use App\Modules\_Module;
 use GdImage;
-use Illuminate\Http\Response;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class StaticImageModule extends _Module
 {
@@ -17,7 +15,7 @@ class StaticImageModule extends _Module
         ];
     }
 
-    public function getImage(string $lang, int $w, int $h, array $atts): GdImage|null {
+    public function getImage(Display &$display, int $w, int $h, array $atts): GdImage|null {
         $url = $atts['url'] ?? null;
         $aspectRatio = $atts['aspect_ratio'] ?? null;
 

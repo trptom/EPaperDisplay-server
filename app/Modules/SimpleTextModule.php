@@ -2,6 +2,7 @@
 
 namespace App\Modules;
 
+use App\Models\Display;
 use App\Modules\_Module;
 use GdImage;
 
@@ -17,7 +18,7 @@ class SimpleTextModule extends _Module
         ];
     }
 
-    public function getImage(string $lang, int $w, int $h, array $atts): GdImage|null {
+    public function getImage(Display &$display, int $w, int $h, array $atts): GdImage|null {
         $text = $atts['text'] ?? null;
         $alignment_x = $atts['alignment_x'] ?? null;
         $alignment_y = $atts['alignment_y'] ?? null;

@@ -2,6 +2,7 @@
 
 namespace App\Modules;
 
+use App\Models\Display;
 use GdImage;
 
 const MODULE_ID_STATIC_IMAGE = 1;
@@ -64,7 +65,7 @@ abstract class _Module {
      */
     abstract public static function getAttsDef(): array;
 
-    abstract public function getImage(string $lang, int $w, int $h, array $atts): GdImage|null;
+    abstract public function getImage(Display &$display, int $w, int $h, array $atts): GdImage|null;
 
 
 }

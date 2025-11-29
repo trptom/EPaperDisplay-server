@@ -2,11 +2,9 @@
 
 namespace App\Modules;
 
+use App\Models\Display;
 use App\Modules\_Module;
 use GdImage;
-use Illuminate\Http\Response;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class CalendarModule extends _Module
 {
@@ -15,11 +13,13 @@ class CalendarModule extends _Module
         ];
     }
 
-    public function getImage(string $lang, int $w, int $h, array $atts): GdImage|null {
+    public function getImage(Display &$display, int $w, int $h, array $atts): GdImage|null {
         $img = imagecreatetruecolor($w, $h);
         if ($img == false) {
             return null;
         }
+
+        // TODO calendar implementation.
 
         return $img;
     }
