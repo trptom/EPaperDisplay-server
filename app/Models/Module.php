@@ -9,6 +9,10 @@ class Module extends Model
 {
     use HasFactory;
 
+    // Use only created_at; disable updated_at
+    public $timestamps = true;
+    const UPDATED_AT = null;
+
     public $incrementing = false;
     protected $primaryKey = null; // composite primary
 
